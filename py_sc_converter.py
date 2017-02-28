@@ -13,12 +13,13 @@ import re
 class ServerClass(object):
     def __init__(self, fl):
         self.apps = {}
-        i = 0
+        n = 1
         app_name = ''
         for i in range(0, len(fl)):
             if re.search('\[serverClass:[^:]+\]', fl[i]):
                 app_name = re.search('\[serverClass:([^:]+)\]', fl[i]).group(1)
-                self.apps[app_name] = [i]
+                self.apps[app_name] = [n]
+                n = n + 1
             elif re.search('whitelist\.\d+\s*=\s*[\d\.]+', fl[i]):
                 lst = re.search('whitelist\.\d+\s*=\s*([^\)]+\))', fl[i]).group(1)
                 self.apps[app_name].append(self.recompose_ip(lst))
@@ -27,10 +28,11 @@ class ServerClass(object):
         """ Print friendly object representation """
         rep = '\nList of apps in serverclass.conf:\n\n'
         for i in self.apps:
-            rep += 'app: %s,  index: %d\n' % (i, self.apps[i][0])
+            rep += '%s\n' % (i)
             for a in range(1, len(self.apps[i])):
-                rep += '+ Whitelisted: ' + ', '.join(self.apps[i][a])
-                rep += '\n'
+                rep += '  ' + ', '.join(self.apps[i][a])
+            rep += '\n'
+            rep += '\n'
         return rep
 
     def recompose_ip(self, wl):
@@ -42,6 +44,13 @@ class ServerClass(object):
         for i in items:
             ips.append("%s%s" % (base, i))
         return ips
+
+    def get_ips_ored(self, app_name):
+        """ Returns list containing all IPs associated to the app """
+        lst =''
+        for i in range(1,len(self.apps[app_name])):
+            lst += ' OR '.join(self.apps[app_name][i])
+        return lst
 
 
 def main():
@@ -55,6 +64,13 @@ def main():
 
     # For sanity check, printing object informations
     print sc
+
+    answer = raw_input("Please indicate for which app you'd like the IPs: ")
+
+    splunk_search = """earliest=-1h@h index =_internal sourcetype="splunkd_access" method="POST" "/services/broker/phoneHome/" ("""
+    splunk_search += sc.get_ips_ored(answer)
+    splunk_search += ") | stats sparkline count by src_clientname clientip src_dns src_hostname"
+    print splunk_search
 
 if __name__ == '__main__':
          main()
