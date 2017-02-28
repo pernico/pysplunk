@@ -46,7 +46,7 @@ class ServerClass(object):
         return ips
 
     def get_ips_ored(self, app_name):
-        """ Returns list containing all IPs associated to the app """
+        """ Returns list containing all IPs associated to the app in a preformatted fashion for Splunk """
         lst =''
         for i in range(1,len(self.apps[app_name])):
             lst += ' OR '.join(self.apps[app_name][i])
@@ -67,10 +67,12 @@ def main():
 
     answer = raw_input("Please indicate for which app you'd like the IPs: ")
 
+    print '+'*50 + '\n'
     splunk_search = """earliest=-1h@h index =_internal sourcetype="splunkd_access" method="POST" "/services/broker/phoneHome/" ("""
     splunk_search += sc.get_ips_ored(answer)
     splunk_search += ") | stats sparkline count by src_clientname clientip src_dns src_hostname"
     print splunk_search
+    print '\n' + '+'*50 + '\n'
 
 if __name__ == '__main__':
          main()
