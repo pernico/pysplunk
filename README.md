@@ -1,7 +1,8 @@
+Splunk - Pernico basic tools
+============================
 This project contains small utilities for Splunk.
 
-pyserverclassconverter.py
+py_sc_converter.py
 -------------------------
-This tool converts a whitelist using ip addresses in parentheses to a search string to convert it to dns whitelisting
+This tool takes as input a serverclass.conf file and produce a search string to run in Splunk. This search will permit the user to view all the details regarding the system's group.
 
-Format is 172.17.34.(34|45|87|245)
